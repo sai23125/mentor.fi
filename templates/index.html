@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Mentor.AI — Business Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+:root {
+  --bg: #030712;
+  --bg2: #080f1a;
+  --bg3: #0d1829;
+  --bg4: #111f36;
+  --border: #1a2d4a;
+  --border2: #1e3555;
+  --text: #e2eaf5;
+  --text-dim: #5a7a9a;
+  --text-mid: #8aabb0;
+  --cyan: #00F5A0;
+  --cyan2: #00D9F5;
+  --purple: #7B61FF;
+  --red: #FF6B6B;
+  --orange: #FFB347;
+  --glow: rgba(0,245,160,0.15);
+  --glow2: rgba(0,217,245,0.1);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Animated background grid */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0,245,160,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,245,160,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* HEADER */
+header {
+  position: relative;
+  z-index: 10;
+  border-bottom: 1px solid var(--border);
+  padding: 0 32px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(8,15,26,0.95);
+  backdrop-filter: blur(20px);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-icon {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, var(--cyan), var(--cyan2));
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  box-shadow: 0 0 20px rgba(0,245,160,0.4);
+}
+
+.logo-text {
+  font-family: 'Syne', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  background: linear-gradient(90deg, var(--cyan), var(--cyan2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.02em;
+}
+
+.logo-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  margin-left: 4px;
+  padding: 2px 6px;
+  border: 1px solid var(--border2);
+  border-radius: 3px;
+}
+
+.header-right { display: flex; align-items: center; gap: 12px; }
+
+.hpill {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.hpill-groq { background: rgba(123,97,255,0.1); border: 1px solid rgba(123,97,255,0.3); color: var(--purple); }
+.hpill-live { background: rgba(0,245,160,0.08); border: 1px solid rgba(0,245,160,0.25); color: var(--cyan); }
+
+/* TICKER */
+.ticker-wrap {
+  position: relative;
+  z-index: 10;
+  background: linear-gradient(90deg, var(--bg2), var(--bg3), var(--bg2));
+  border-bottom: 1px solid var(--border);
+  padding: 5px 0;
+  overflow: hidden;
+}
+
+.ticker {
+  display: inline-block;
+  animation: ticker 40s linear infinite;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.ticker span { color: var(--cyan); margin: 0 2px; }
+@keyframes ticker { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+
+/* APP LAYOUT */
+.app {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 240px 1fr 260px;
+  height: calc(100vh - 86px);
+}
+
+/* PANELS */
+.panel {
+  border-right: 1px solid var(--border);
+  background: rgba(8,15,26,0.8);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.panel-right {
+  border-right: none;
+  border-left: 1px solid var(--border);
+}
+
+.panel-head {
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.panel-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--cyan);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+}
+
+.clear-btn {
+  background: none;
+  border: 1px solid var(--border2);
+  color: var(--text-dim);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  padding: 3px 8px;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: all 0.2s;
+}
+.clear-btn:hover { border-color: var(--red); color: var(--red); }
+
+.panel-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.panel-scroll::-webkit-scrollbar { width: 3px; }
+.panel-scroll::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+/* History items */
+.hist-item {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  padding: 9px 11px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.hist-item:hover { border-color: var(--border2); }
+.hist-item.active { border-color: var(--cyan); background: rgba(0,245,160,0.05); }
+.hist-title { font-size: 11px; color: var(--text); line-height: 1.4; margin-bottom: 3px; font-weight: 500; }
+.hist-time { font-family: 'JetBrains Mono', monospace; font-size: 8px; color: var(--text-dim); }
+
+.hist-empty {
+  text-align: center;
+  padding: 40px 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--text-dim);
+  line-height: 2;
+}
+
+/* Prompt buttons */
+.prompt-section-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  padding: 6px 4px 4px;
+}
+
+.prompt-btn {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  padding: 9px 11px;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+  line-height: 1.45;
+  width: 100%;
+}
+.prompt-btn:hover {
+  border-color: rgba(0,245,160,0.3);
+  color: var(--text);
+  background: rgba(0,245,160,0.04);
+}
+
+/* AI card */
+.ai-card {
+  padding: 16px;
+  border-top: 1px solid var(--border);
+  background: linear-gradient(135deg, rgba(0,245,160,0.03), rgba(0,217,245,0.03));
+}
+
+.ai-card-logo {
+  font-family: 'Syne', sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+  background: linear-gradient(90deg, var(--cyan), var(--cyan2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 6px;
+}
+
+.ai-card-desc {
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+
+.ai-tags { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px; }
+.ai-tag {
+  background: rgba(0,245,160,0.06);
+  border: 1px solid rgba(0,245,160,0.15);
+  color: var(--cyan);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  padding: 2px 7px;
+  border-radius: 3px;
+  letter-spacing: 0.05em;
+}
+
+/* MAIN CONTENT */
+.main-content { display: flex; flex-direction: column; overflow: hidden; }
+
+.response-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px 32px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.response-area::-webkit-scrollbar { width: 4px; }
+.response-area::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+/* Welcome screen */
+.welcome {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 20px;
+}
+
+.welcome-orb {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0,245,160,0.2), rgba(0,217,245,0.1), transparent);
+  border: 1px solid rgba(0,245,160,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 42px;
+  animation: pulse-orb 3s ease-in-out infinite;
+  box-shadow: 0 0 40px rgba(0,245,160,0.1);
+}
+
+@keyframes pulse-orb {
+  0%,100% { transform: scale(1); box-shadow: 0 0 40px rgba(0,245,160,0.1); }
+  50% { transform: scale(1.05); box-shadow: 0 0 60px rgba(0,245,160,0.2); }
+}
+
+.welcome-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 32px;
+  font-weight: 800;
+  background: linear-gradient(90deg, var(--cyan), var(--cyan2), var(--purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.welcome-sub {
+  font-size: 13px;
+  color: var(--text-dim);
+  max-width: 420px;
+  line-height: 1.7;
+}
+
+.welcome-features {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.wf {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-size: 11px;
+  color: var(--text-mid);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Loading */
+.loading-state {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 20px;
+}
+
+.loading-orb {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 2px solid var(--border2);
+  border-top-color: var(--cyan);
+  border-right-color: var(--cyan2);
+  animation: spin 1s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loading-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.loading-dots {
+  display: flex;
+  gap: 4px;
+  margin-top: -10px;
+}
+.loading-dots span {
+  width: 4px; height: 4px; border-radius: 50%; background: var(--cyan);
+  animation: dotpulse 1.4s infinite ease-in-out;
+}
+.loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+.loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes dotpulse { 0%,80%,100%{opacity:0.2;transform:scale(0.8)} 40%{opacity:1;transform:scale(1)} }
+
+/* Response block */
+.response-block { display: none; animation: fadein 0.5s ease; }
+@keyframes fadein { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+.resp-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 22px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.resp-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--cyan), var(--cyan2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+  box-shadow: 0 0 16px rgba(0,245,160,0.3);
+}
+
+.resp-name {
+  font-family: 'Syne', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  background: linear-gradient(90deg, var(--cyan), var(--cyan2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.resp-time {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--text-dim);
+}
+
+.resp-actions { margin-left: auto; display: flex; gap: 8px; }
+
+.action-btn {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  color: var(--text-dim);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  padding: 6px 12px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.action-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+.action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+#analysis-text {
+  font-size: 13.5px;
+  line-height: 1.85;
+  color: var(--text);
+  white-space: pre-wrap;
+}
+#analysis-text strong { color: var(--cyan); font-weight: 600; }
+#analysis-text em { color: var(--text-mid); font-style: italic; }
+
+/* CHARTS */
+.charts-section { margin-top: 32px; }
+
+.section-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.section-divider-line { flex: 1; height: 1px; background: var(--border); }
+
+.section-divider-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--cyan);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  white-space: nowrap;
+}
+
+.charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+.chart-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 18px;
+  transition: border-color 0.2s;
+}
+.chart-card:hover { border-color: var(--border2); }
+.chart-card.full { grid-column: 1 / -1; }
+
+.chart-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--cyan);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.chart-label::before { content: ''; width: 3px; height: 12px; background: var(--cyan); border-radius: 2px; }
+
+.chart-wrap { position: relative; }
+
+/* Investment legend */
+.inv-legend { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 8px; }
+.inv-leg-item { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--text-dim); }
+.inv-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+
+/* Risk table */
+.risk-tbl { width: 100%; border-collapse: collapse; font-size: 11px; }
+.risk-tbl th {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.risk-tbl td {
+  padding: 9px 10px;
+  border-bottom: 1px solid rgba(26,45,74,0.5);
+  vertical-align: middle;
+}
+.risk-tbl tr:last-child td { border-bottom: none; }
+.risk-tbl tr:hover td { background: rgba(0,245,160,0.02); }
+
+.risk-name { color: var(--text); font-weight: 500; }
+.bar-row { display: flex; align-items: center; gap: 8px; }
+.bar { height: 5px; border-radius: 3px; min-width: 4px; }
+.bar-val { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--text-dim); }
+.risk-fix { color: var(--text-dim); font-size: 10px; line-height: 1.4; }
+
+/* Timeline */
+.tl { display: flex; flex-direction: column; }
+.tl-item { display: flex; gap: 12px; }
+.tl-left { display: flex; flex-direction: column; align-items: center; width: 30px; flex-shrink: 0; }
+.tl-dot { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; color: #000; z-index: 1; flex-shrink: 0; }
+.tl-connector { width: 2px; background: var(--border); flex: 1; margin: 3px 0; min-height: 10px; }
+.tl-body { padding-bottom: 14px; flex: 1; }
+.tl-day-label { font-family: 'JetBrains Mono', monospace; font-size: 8px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 2px; }
+.tl-title { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+.tl-desc { font-size: 11px; color: var(--text-dim); line-height: 1.5; }
+
+.c-research { background: #00D9F5; }
+.c-validation { background: #00F5A0; }
+.c-build { background: #7B61FF; }
+.c-outreach { background: #FFB347; }
+.c-financial { background: #FF6B6B; }
+.c-review { background: #00F5A0; }
+
+/* INPUT */
+.input-wrap {
+  border-top: 1px solid var(--border);
+  padding: 14px 32px 16px;
+  background: rgba(8,15,26,0.95);
+  backdrop-filter: blur(20px);
+}
+
+.input-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  margin-bottom: 8px;
+}
+
+.input-row { display: flex; gap: 10px; align-items: flex-end; }
+
+textarea {
+  flex: 1;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  padding: 11px 14px;
+  border-radius: 6px;
+  resize: none;
+  outline: none;
+  line-height: 1.6;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  min-height: 44px;
+  max-height: 110px;
+}
+textarea:focus {
+  border-color: rgba(0,245,160,0.4);
+  box-shadow: 0 0 0 3px rgba(0,245,160,0.06);
+}
+textarea::placeholder { color: var(--text-dim); }
+
+.send-btn {
+  background: linear-gradient(135deg, var(--cyan), var(--cyan2));
+  border: none;
+  color: #000;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0 20px;
+  height: 44px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+  box-shadow: 0 0 20px rgba(0,245,160,0.2);
+}
+.send-btn:hover { transform: translateY(-1px); box-shadow: 0 0 28px rgba(0,245,160,0.35); }
+.send-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+.input-footer { display: flex; justify-content: space-between; margin-top: 7px; }
+.input-hint { font-family: 'JetBrains Mono', monospace; font-size: 8px; color: var(--text-dim); }
+
+@media(max-width:900px) {
+  .app { grid-template-columns: 1fr; }
+  .panel, .panel-right { display: none; }
+  header { padding: 0 16px; }
+  .response-area { padding: 20px 16px; }
+  .input-wrap { padding: 12px 16px; }
+  .charts-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">🧠</div>
+    <span class="logo-text">Mentor.AI</span>
+    <span class="logo-tag">v2.0</span>
+  </div>
+  <div class="header-right">
+    <span class="hpill hpill-groq">⚡ Groq · Llama 3.3 70B</span>
+    <span class="hpill hpill-live">● Live</span>
+  </div>
+</header>
+
+<!-- TICKER -->
+<div class="ticker-wrap">
+  <div class="ticker">
+    <span>▲</span> NASDAQ 17,820 &nbsp;|&nbsp; <span>▲</span> S&P500 5,204 &nbsp;|&nbsp; <span>▲</span> SENSEX 74,502 &nbsp;|&nbsp; <span>▲</span> NIFTY 22,650 &nbsp;|&nbsp; <span>▲</span> BTC $67,420 &nbsp;|&nbsp; GOLD $2,341 &nbsp;|&nbsp; USD/INR 83.45 &nbsp;|&nbsp; OIL $78.30 <span style="color:var(--red)">▼</span> &nbsp;|&nbsp; VIX 16.2 &nbsp;|&nbsp; 10Y 4.32% &nbsp;|&nbsp; VC FUNDING HIGH &nbsp;|&nbsp; INDIA GDP +7.2% &nbsp;|&nbsp;
+    <span>▲</span> NASDAQ 17,820 &nbsp;|&nbsp; <span>▲</span> S&P500 5,204 &nbsp;|&nbsp; <span>▲</span> SENSEX 74,502 &nbsp;|&nbsp; <span>▲</span> NIFTY 22,650 &nbsp;|&nbsp; <span>▲</span> BTC $67,420 &nbsp;|&nbsp; GOLD $2,341 &nbsp;|&nbsp; USD/INR 83.45 &nbsp;|&nbsp; OIL $78.30 <span style="color:var(--red)">▼</span> &nbsp;|&nbsp; VIX 16.2 &nbsp;|&nbsp; 10Y 4.32% &nbsp;|&nbsp; VC FUNDING HIGH &nbsp;|&nbsp; INDIA GDP +7.2% &nbsp;|&nbsp;
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app">
+
+  <!-- LEFT: History -->
+  <div class="panel">
+    <div class="panel-head">
+      <span class="panel-label">Session History</span>
+      <button class="clear-btn" onclick="clearHistory()">Clear</button>
+    </div>
+    <div class="panel-scroll" id="historyList">
+      <div class="hist-empty">No sessions yet.<br/>Ask Mentor.AI<br/>to get started.</div>
+    </div>
+  </div>
+
+  <!-- CENTER -->
+  <div class="main-content">
+    <div class="response-area" id="responseArea">
+
+      <!-- Welcome -->
+      <div class="welcome" id="welcomeState">
+        <div class="welcome-orb">🧠</div>
+        <div class="welcome-title">Welcome to Mentor.AI</div>
+        <div class="welcome-sub">Describe your business idea, capital, skills and location. Get AI-powered analysis with live charts, revenue projections and a personalized action plan.</div>
+        <div class="welcome-features">
+          <div class="wf">📊 Investment Charts</div>
+          <div class="wf">📈 Revenue Projections</div>
+          <div class="wf">⚠️ Risk Matrix</div>
+          <div class="wf">🗓️ 7-Day Plan</div>
+          <div class="wf">📄 PDF Export</div>
+        </div>
+      </div>
+
+      <!-- Loading -->
+      <div class="loading-state" id="loadingState">
+        <div class="loading-orb"></div>
+        <div class="loading-text">Mentor.AI is analysing...</div>
+        <div class="loading-dots"><span></span><span></span><span></span></div>
+      </div>
+
+      <!-- Response -->
+      <div class="response-block" id="responseBlock">
+        <div class="resp-header">
+          <div class="resp-icon">🧠</div>
+          <div>
+            <div class="resp-name">Mentor.AI</div>
+            <div class="resp-time" id="respTime">—</div>
+          </div>
+          <div class="resp-actions">
+            <button class="action-btn" onclick="exportPDF()" id="pdfBtn">⬇ Export PDF</button>
+          </div>
+        </div>
+
+        <div id="analysis-text"></div>
+
+        <div class="charts-section" id="chartsSection">
+          <div class="section-divider">
+            <div class="section-divider-line"></div>
+            <div class="section-divider-label">📊 Visual Analysis</div>
+            <div class="section-divider-line"></div>
+          </div>
+
+          <div class="charts-grid">
+            <!-- Investment -->
+            <div class="chart-card" id="investCard">
+              <div class="chart-label" id="investLabel">Investment Breakdown</div>
+              <div class="chart-wrap" style="height:210px"><canvas id="investChart"></canvas></div>
+              <div class="inv-legend" id="investLegend"></div>
+            </div>
+
+            <!-- Revenue -->
+            <div class="chart-card" id="revenueCard">
+              <div class="chart-label" id="revenueLabel">Revenue Projection</div>
+              <div class="chart-wrap" style="height:210px"><canvas id="revenueChart"></canvas></div>
+            </div>
+
+            <!-- Timeline -->
+            <div class="chart-card full" id="timelineCard">
+              <div class="chart-label" id="timelineLabel">7-Day Action Plan</div>
+              <div class="tl" id="timelineContent"></div>
+            </div>
+
+            <!-- Risk -->
+            <div class="chart-card full" id="riskCard">
+              <div class="chart-label" id="riskLabel">Risk Matrix</div>
+              <table class="risk-tbl">
+                <thead>
+                  <tr>
+                    <th style="width:20%">Risk Factor</th>
+                    <th style="width:17%">Probability</th>
+                    <th style="width:17%">Impact</th>
+                    <th>Mitigation Strategy</th>
+                  </tr>
+                </thead>
+                <tbody id="riskBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- INPUT -->
+    <div class="input-wrap">
+      <div class="input-label">Describe your situation — more detail = better analysis</div>
+      <div class="input-row">
+        <textarea id="userInput" rows="2" placeholder="e.g. I'm 23, have ₹80,000 saved, good at social media, want to start a business in Hyderabad..."></textarea>
+        <button class="send-btn" id="sendBtn" onclick="getAdvice()">Analyse →</button>
+      </div>
+      <div class="input-footer">
+        <span class="input-hint">Include: age · capital · skills · location · risk appetite</span>
+        <span class="input-hint">Enter to send · Shift+Enter for new line</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Prompts -->
+  <div class="panel panel-right">
+    <div class="panel-head">
+      <span class="panel-label">Quick Start</span>
+    </div>
+    <div class="panel-scroll">
+      <div class="prompt-section-label">Try These Prompts →</div>
+      <button class="prompt-btn" onclick="usePrompt(this)">I'm 22 with ₹50,000 savings and a passion for fitness. What business should I start in India?</button>
+      <button class="prompt-btn" onclick="usePrompt(this)">I want to start a food delivery business in a Tier-2 city with ₹2 lakh capital.</button>
+      <button class="prompt-btn" onclick="usePrompt(this)">I'm a software engineer thinking of going freelance or building a SaaS. I have 6 months of runway.</button>
+      <button class="prompt-btn" onclick="usePrompt(this)">I see a gap in eco-friendly products in my city. Can I build a profitable business?</button>
+      <button class="prompt-btn" onclick="usePrompt(this)">I want to invest ₹5 lakhs. Start a business or put it in stocks?</button>
+      <button class="prompt-btn" onclick="usePrompt(this)">I'm a student with zero capital but strong social media skills. How do I start earning?</button>
+      <button class="prompt-btn" onclick="usePrompt(this)">I want to open a cloud kitchen at home with ₹30,000. Is it viable?</button>
+    </div>
+    <div class="ai-card">
+      <div class="ai-card-logo">Mentor.AI</div>
+      <div class="ai-card-desc">AI-powered business intelligence. Market analysis, revenue projections, risk assessment and action plans — all in seconds.</div>
+      <div class="ai-tags">
+        <span class="ai-tag">Market Analysis</span>
+        <span class="ai-tag">VC Insight</span>
+        <span class="ai-tag">Startups</span>
+        <span class="ai-tag">India Markets</span>
+        <span class="ai-tag">Risk AI</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────
+let history = [];
+try { history = JSON.parse(localStorage.getItem('mentor_ai_history') || '[]'); } catch(e) {}
+let currentSession = null;
+let investChartInst = null;
+let revenueChartInst = null;
+
+const $ = id => document.getElementById(id);
+const ta = $('userInput');
+
+// ── Events ─────────────────────────────────────────
+ta.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); getAdvice(); }
+});
+ta.addEventListener('input', () => {
+  ta.style.height = 'auto';
+  ta.style.height = Math.min(ta.scrollHeight, 110) + 'px';
+});
+
+function usePrompt(btn) {
+  ta.value = btn.textContent.trim();
+  ta.style.height = 'auto';
+  ta.style.height = Math.min(ta.scrollHeight, 110) + 'px';
+  ta.focus();
+}
+
+function fmt(text) {
+  text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
+  return text;
+}
+
+function riskColor(v) {
+  return v >= 70 ? '#FF6B6B' : v >= 45 ? '#FFB347' : '#00F5A0';
+}
+
+// ── Main ───────────────────────────────────────────
+async function getAdvice() {
+  const input = ta.value.trim();
+  if (!input) return;
+
+  const btn = $('sendBtn');
+  btn.disabled = true;
+  btn.textContent = 'Analysing...';
+
+  $('welcomeState').style.display = 'none';
+  $('responseBlock').style.display = 'none';
+  $('loadingState').style.display = 'flex';
+  $('responseArea').scrollTop = 0;
+
+  try {
+    const res = await fetch('/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: input })
+    });
+
+    const json = await res.json();
+    $('loadingState').style.display = 'none';
+
+    if (!json.success) {
+      alert('Error: ' + json.error);
+      btn.disabled = false;
+      btn.textContent = 'Analyse →';
+      return;
+    }
+
+    const data = json.data;
+    const session = { id: Date.now(), title: data.title, input, data, time: new Date().toLocaleString() };
+    currentSession = session;
+
+    history.unshift(session);
+    if (history.length > 20) history = history.slice(0, 20);
+    try { localStorage.setItem('mentor_ai_history', JSON.stringify(history)); } catch(e) {}
+
+    renderHistory();
+    renderSession(session);
+
+  } catch(err) {
+    $('loadingState').style.display = 'none';
+    alert('Connection error: ' + err.message);
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Analyse →';
+}
+
+// ── Render Session ─────────────────────────────────
+function renderSession(session) {
+  $('respTime').textContent = session.time;
+  $('analysis-text').innerHTML = fmt(session.data.analysis);
+  $('responseBlock').style.display = 'block';
+
+  document.querySelectorAll('.hist-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.id == session.id);
+  });
+
+  renderCharts(session.data.charts);
+  setTimeout(() => { $('responseArea').scrollTop = 0; }, 60);
+}
+
+// ── Charts ─────────────────────────────────────────
+function renderCharts(c) {
+  renderInvest(c.investment);
+  renderRevenue(c.revenue);
+  renderTimeline(c.timeline);
+  renderRisk(c.risks);
+}
+
+function renderInvest(inv) {
+  $('investLabel').textContent = inv.label;
+  if (investChartInst) { investChartInst.destroy(); investChartInst = null; }
+
+  const total = inv.items.reduce((s, i) => s + i.amount, 0);
+
+  $('investLegend').innerHTML = inv.items.map(i => `
+    <div class="inv-leg-item">
+      <div class="inv-dot" style="background:${i.color}"></div>
+      <span>${i.name}: <strong style="color:var(--text)">${inv.currency}${i.amount.toLocaleString()}</strong></span>
+    </div>`).join('');
+
+  investChartInst = new Chart($('investChart').getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      labels: inv.items.map(i => i.name),
+      datasets: [{
+        data: inv.items.map(i => i.amount),
+        backgroundColor: inv.items.map(i => i.color),
+        borderColor: '#0d1829',
+        borderWidth: 3,
+        hoverOffset: 8
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '68%',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: { label: ctx => ` ${inv.currency}${ctx.parsed.toLocaleString()} (${Math.round(ctx.parsed/total*100)}%)` },
+          backgroundColor: '#0d1829', borderColor: '#1a2d4a', borderWidth: 1,
+          titleColor: '#00F5A0', bodyColor: '#e2eaf5', padding: 10
+        }
+      }
+    }
+  });
+}
+
+function renderRevenue(rev) {
+  $('revenueLabel').textContent = rev.label;
+  if (revenueChartInst) { revenueChartInst.destroy(); revenueChartInst = null; }
+
+  revenueChartInst = new Chart($('revenueChart').getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: rev.months,
+      datasets: [
+        { label: 'Optimistic',  data: rev.optimistic,  borderColor: '#00F5A0', backgroundColor: 'rgba(0,245,160,0.05)', tension: 0.4, borderWidth: 2, pointRadius: 2, fill: false },
+        { label: 'Realistic',   data: rev.realistic,   borderColor: '#00D9F5', backgroundColor: 'rgba(0,217,245,0.08)', tension: 0.4, borderWidth: 2.5, pointRadius: 3, fill: true },
+        { label: 'Pessimistic', data: rev.pessimistic, borderColor: '#FF6B6B', backgroundColor: 'rgba(255,107,107,0.04)', tension: 0.4, borderWidth: 2, pointRadius: 2, fill: false }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: '#5a7a9a', font: { family: 'JetBrains Mono', size: 9 }, boxWidth: 16, padding: 12 } },
+        tooltip: {
+          callbacks: { label: ctx => ` ${rev.currency}${ctx.parsed.y.toLocaleString()}` },
+          backgroundColor: '#0d1829', borderColor: '#1a2d4a', borderWidth: 1,
+          titleColor: '#00F5A0', bodyColor: '#e2eaf5', padding: 10
+        }
+      },
+      scales: {
+        x: { ticks: { color: '#5a7a9a', font: { family: 'JetBrains Mono', size: 8 } }, grid: { color: '#0d1829' } },
+        y: { ticks: { color: '#5a7a9a', font: { family: 'JetBrains Mono', size: 8 }, callback: v => rev.currency + (v >= 1000 ? (v/1000).toFixed(0)+'k' : v) }, grid: { color: '#0d1829' } }
+      }
+    }
+  });
+}
+
+function renderTimeline(tl) {
+  $('timelineLabel').textContent = tl.label;
+  $('timelineContent').innerHTML = tl.days.map((d, i) => `
+    <div class="tl-item">
+      <div class="tl-left">
+        <div class="tl-dot c-${d.category}">${d.day}</div>
+        ${i < tl.days.length - 1 ? '<div class="tl-connector"></div>' : ''}
+      </div>
+      <div class="tl-body">
+        <div class="tl-day-label">Day ${d.day}</div>
+        <div class="tl-title">${d.title}</div>
+        <div class="tl-desc">${d.description}</div>
+      </div>
+    </div>`).join('');
+}
+
+function renderRisk(risks) {
+  $('riskLabel').textContent = risks.label;
+  $('riskBody').innerHTML = risks.items.map(r => `
+    <tr>
+      <td class="risk-name">${r.name}</td>
+      <td><div class="bar-row"><div class="bar" style="width:${r.probability*0.65}px;background:${riskColor(r.probability)}"></div><span class="bar-val">${r.probability}%</span></div></td>
+      <td><div class="bar-row"><div class="bar" style="width:${r.impact*0.65}px;background:${riskColor(r.impact)}"></div><span class="bar-val">${r.impact}%</span></div></td>
+      <td class="risk-fix">${r.mitigation}</td>
+    </tr>`).join('');
+}
+
+// ── History ────────────────────────────────────────
+function renderHistory() {
+  const list = $('historyList');
+  if (!history.length) {
+    list.innerHTML = '<div class="hist-empty">No sessions yet.<br/>Ask Mentor.AI<br/>to get started.</div>';
+    return;
+  }
+  list.innerHTML = history.map(s => `
+    <div class="hist-item ${currentSession && currentSession.id === s.id ? 'active' : ''}" data-id="${s.id}" onclick="loadSession(${s.id})">
+      <div class="hist-title">${s.title}</div>
+      <div class="hist-time">${s.time}</div>
+    </div>`).join('');
+}
+
+function loadSession(id) {
+  const s = history.find(x => x.id === id);
+  if (!s) return;
+  currentSession = s;
+  $('welcomeState').style.display = 'none';
+  $('loadingState').style.display = 'none';
+  renderSession(s);
+}
+
+function clearHistory() {
+  if (!confirm('Clear all sessions?')) return;
+  history = [];
+  currentSession = null;
+  try { localStorage.removeItem('mentor_ai_history'); } catch(e) {}
+  renderHistory();
+  $('responseBlock').style.display = 'none';
+  $('welcomeState').style.display = 'flex';
+}
+
+// ── PDF Export ─────────────────────────────────────
+async function exportPDF() {
+  const btn = $('pdfBtn');
+  btn.textContent = '⏳ Generating...';
+  btn.disabled = true;
+
+  try {
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const W = 210, M = 15, CW = W - M * 2;
+    let y = M;
+
+    // Header bar
+    pdf.setFillColor(3, 7, 18);
+    pdf.rect(0, 0, W, 28, 'F');
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(18);
+    pdf.setTextColor(0, 245, 160);
+    pdf.text('Mentor.AI', M, 13);
+    pdf.setFontSize(8);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setTextColor(90, 122, 154);
+    pdf.text('Business Intelligence Report', M, 20);
+    pdf.text(`Generated: ${new Date().toLocaleString()}`, W - M, 20, { align: 'right' });
+    y = 36;
+
+    // Title
+    if (currentSession) {
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(13);
+      pdf.setTextColor(226, 234, 245);
+      pdf.text(currentSession.title, M, y);
+      y += 9;
+    }
+
+    // Analysis
+    const text = $('analysis-text').innerText;
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(9);
+    pdf.setTextColor(180, 190, 210);
+    const lines = pdf.splitTextToSize(text, CW);
+    for (const line of lines) {
+      if (y > 276) { pdf.addPage(); y = M; }
+      pdf.text(line, M, y);
+      y += 4.5;
+    }
+
+    // Charts
+    for (const id of ['investCard','revenueCard','timelineCard','riskCard']) {
+      const el = $(id);
+      if (!el) continue;
+      pdf.addPage();
+      const canvas = await html2canvas(el, { backgroundColor: '#0d1829', scale: 1.5 });
+      const img = canvas.toDataURL('image/png');
+      const h = (canvas.height / canvas.width) * CW;
+      pdf.addImage(img, 'PNG', M, M, CW, Math.min(h, 260));
+    }
+
+    pdf.save(`mentor-ai-${Date.now()}.pdf`);
+  } catch(err) {
+    alert('PDF error: ' + err.message);
+  }
+
+  btn.textContent = '⬇ Export PDF';
+  btn.disabled = false;
+}
+
+// Init
+renderHistory();
+</script>
+</body>
+</html>
